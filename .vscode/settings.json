@@ -1,0 +1,13 @@
+{
+    "files.associations": {
+        "xtree": "cpp",
+        "string.h": "c",
+        "map.h": "c",
+        "stdlib.h": "c",
+        "stdio.h": "c"
+    },
+    "cSpell.language": "en,es-ES",
+    "cSpell.ignoreWords": [
+        "dolar"
+    ]
+}
