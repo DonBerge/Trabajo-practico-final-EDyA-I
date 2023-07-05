@@ -10,4 +10,5 @@ int main()
     automata_procesar_archivo(a,entrada,salida);
     fclose(entrada);
     fclose(salida);
+    return 0;
 }

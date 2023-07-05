@@ -1,6 +1,7 @@
 #ifndef __AUTOMATA_C__
 #define __AUTOMATA_C__
 #include "automata.h"
+#include "../ListaIntervalos/listaintervalos.c"
 #include <assert.h>
 #include "../Cola/cola.c"
 #include <stdlib.h>
@@ -159,22 +160,31 @@ void destruir_char(void *dato)
     free(dato);
 }
 
-typedef struct
+void procesarCaracteres(Cola *cola, ListaIntervalos *lista_intervalos, FILE *archivo_salida, int letrasADescartar)
 {
-    int inicio;
-    int fin;
-} Intervalo;
-
-void *copy_intervalo(void *dato)
-{
-    Intervalo *inter = (Intervalo *)malloc(sizeof(Intervalo));
-    *inter = *((Intervalo *)dato);
-    return inter;
-}
-
-void destruir_intervalo(void *dato)
-{
-    free(dato);
+    for (int i = 0; i < letrasADescartar; i++)
+    {
+        if (lista_intervalos_vacia(*lista_intervalos))
+            *cola = cola_pop(*cola);
+        else
+        {
+            Intervalo inter = lista_intervalos_elemento_inicio(*lista_intervalos);
+            while (i < inter.inicio)
+            {
+                *cola = cola_pop(*cola);
+                i++;
+            }
+            while (i < inter.final)
+            {
+                fputc(*((char *)cola_front(*cola)), archivo_salida);
+                *cola = cola_pop(*cola);
+                i++;
+            }
+            fputc(' ', archivo_salida);
+            *lista_intervalos = lista_intervalos_eliminar_inicio(*lista_intervalos);
+            i--;
+        }
+    }
 }
 
 void automata_procesar_archivo(Automata estado_inicial, FILE *archivo_entrada, FILE *archivo_salida)
@@ -182,7 +192,7 @@ void automata_procesar_archivo(Automata estado_inicial, FILE *archivo_entrada, F
     // Uso una cola para guardar temporalmente los caracteres que pueden formar una palabra a espaciar
     Cola cola = cola_crear(copy_char, destruir_char);
 
-    Cola cola_intervalos = cola_crear(copy_intervalo, destruir_intervalo);
+    ListaIntervalos lista_intervalos = lista_intervalos_crear();
 
     // Inicialmente, el estado actual es el inicial y el largo de la ultima
     // palabra encontrada es 0
@@ -197,20 +207,11 @@ void automata_procesar_archivo(Automata estado_inicial, FILE *archivo_entrada, F
         // los caracteres sobrantes, reinciar el automata a como estaba inicialmente
         if (c == '\n' || c == EOF)
         {
-            // Imprimo los caracteres de la ultima palabra encontrada
-            for (int i = 0; i < largo_ultima_palabra_encontrada; i++)
-            {
-                fputc(*((char *)cola_front(cola)), archivo_salida);
-                cola = cola_pop(cola);
-            }
-            // Los caracteres que no corresponden a la ultima palabra encontrada
-            // son borrados de la cola sin imprimirse
-            while (!cola_empty(cola))
-                cola = cola_pop(cola);
-
+            procesarCaracteres(&cola, &lista_intervalos, archivo_salida, cola_size(cola));
             // Dejo el automata a como estaba inicialmente
             estado_actual = estado_inicial;
             largo_ultima_palabra_encontrada = 0;
+            lista_intervalos = lista_intervalos_destruir(lista_intervalos);
 
             fputc('\n', archivo_salida);
         }
@@ -225,77 +226,48 @@ void automata_procesar_archivo(Automata estado_inicial, FILE *archivo_entrada, F
             // el largo de la ultima palabra encontrada si es necesario
             int prevLargo = estado_actual->largoPrefijo;
             estado_actual = automata_seguir_transicion(estado_actual, c);
+
+            // Si hay letras a descartar es necesario recuperarse de errores
+            int letrasADescartar = prevLargo - estado_actual->largoPrefijo + 1;
+            procesarCaracteres(&cola, &lista_intervalos, archivo_salida, letrasADescartar);
+
+            // Se llego a un estado de aceptacion, la palabra aceptada necesariamente contiene todas las palabras vistas
+            // hasta el momento, asi que se descartan las palabras encontradas hasta el momento
             if (estado_actual->palabraAceptada)
             {
-                // Vacio la cola
-                while (!cola_empty(cola_intervalos))
-                    cola_intervalos = cola_pop(cola_intervalos);
-                largo_ultima_palabra_encontrada = estado_actual->largoPrefijo;
+                int lar = estado_actual->largoPrefijo;
+                lista_intervalos = lista_intervalos_destruir(lista_intervalos);
+                lista_intervalos = lista_intervalos_insertar_final(lista_intervalos, 0, estado_actual->largoPrefijo);
             }
+            // Existe un sufijo propio del prefijo actual que esta en el diccionario
             else if (estado_actual->transicion_de_salida != NULL)
             {
-                Intervalo x;
-                x.fin = cola_size(cola);
-                x.inicio = x.fin - estado_actual->transicion_de_salida->largoPrefijo;
-                cola_intervalos = cola_push(cola_intervalos, &x);
-            }
-
-            /**** FUNCIONA PERO HAY QUE OPTIMIZARLO*****/
-
-            // Si se llego a un estado que representa un prefijo de largo menor,
-            // entonces es necesario recuperarse de errores
-            int l = prevLargo - estado_actual->largoPrefijo + 1;
-            for (int i = 0; i < l; i++)
-            {
-                // Voy sacando los caracters que ya no necesito de la cola,
-                // imprimendolos si representan un caracter de una palabra
-                // encontrada
-                if (i < largo_ultima_palabra_encontrada)
+                Intervalo intervalo_a_insertar;
+                EstadoAutomata *estado_salida = estado_actual->transicion_de_salida;
+                int inicioIntervalo = estado_actual->largoPrefijo - estado_salida->largoPrefijo;
+                if (!lista_intervalos_vacia(lista_intervalos))
                 {
-                    fputc(*((char *)cola_front(cola)), archivo_salida);
-                    cola = cola_pop(cola);
-                }
-                else
-                {
-                    if (cola_empty(cola_intervalos))
-                    {
-                        while (i < l)
-                        {
-                            i++;
-                            cola = cola_pop(cola);
-                        }
-                    }
+                    // Los intervalos se solapan y empiezan en el mismo punto, prevalece el de mayor largo(que siempre es el estado a insertar)
+                    if (inicioIntervalo == lista_intervalos_elemento_final(lista_intervalos).inicio)
+                        lista_intervalos = lista_intervalos_eliminar_final(lista_intervalos);
                     else
                     {
-                        int seImprimioPalabra = 0;
-                        Intervalo *x = (Intervalo *)cola_front(cola_intervalos);
-                        while (i < x->fin)
+                        // Busco el primer sufijo propio que es palabra del diccionario y a su vez no se solapa con la ultima palabra encontrada
+                        while (estado_salida != NULL && lista_intervalos_elemento_final(lista_intervalos).final >= inicioIntervalo)
                         {
-                            if (i >= x->inicio)
-                            {
-                                fputc(*((char *)cola_front(cola)), archivo_salida);
-                                seImprimioPalabra = 1;
-                            }
-                            cola = cola_pop(cola);
-                            i++;
+                            estado_salida = estado_salida->transicion_de_salida;
+                            if (estado_salida != NULL)
+                                inicioIntervalo = estado_actual->largoPrefijo - estado_salida->largoPrefijo;
                         }
-                        i--;
-                        if(seImprimioPalabra)
-                            fputc(' ',archivo_salida);
-                        cola_intervalos = cola_pop(cola_intervalos);
                     }
                 }
-            }
-
-            // Si se encontro alguna palabra, imprimo un espacio
-            // y dejo el largo de la palabra encontrada en 0
-            if (0 < largo_ultima_palabra_encontrada && largo_ultima_palabra_encontrada <= l)
-            {
-                fputc(' ', archivo_salida);
-                largo_ultima_palabra_encontrada = 0;
+                if (estado_salida != NULL)
+                    // Se encontro un intervalo que cumple con lo pedido
+                    lista_intervalos = lista_intervalos_insertar_final(lista_intervalos, inicioIntervalo, estado_actual->largoPrefijo);
             }
         }
     }
+    lista_intervalos = lista_intervalos_destruir(lista_intervalos);
     cola_destroy(cola);
 }
 
