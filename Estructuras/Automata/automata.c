@@ -1,8 +1,10 @@
 #ifndef __AUTOMATA_C__
 #define __AUTOMATA_C__
 #include "automata.h"
-#include "../ListaIntervalos/listaintervalos.c"
+// #include "../ListaIntervalos/listaintervalos.c"
+#include "../HeapIntervalos/heapintervalos.c"
 #include <assert.h>
+#include <ctype.h>
 #include "../Cola/cola.c"
 #include <stdlib.h>
 
@@ -18,7 +20,7 @@ typedef struct _EstadoAutomata
     Bool palabraAceptada;
     // El largo del prefijo representado por el estado actual
     unsigned largoPrefijo;
-    struct _EstadoAutomata *transicion[128];
+    struct _EstadoAutomata *transicion[26];
     // Puntero al estado conectado al estado actual por una transicion de falla
     struct _EstadoAutomata *transicion_de_falla;
 
@@ -44,7 +46,7 @@ EstadoAutomata *estado_crear(EstadoAutomata *padre, char valor_transicion)
     estado->padre = padre;
     estado->valor_transicion_padre = ((int)valor_transicion);
     // Inicializo los hijos
-    for (int i = 0; i < 128; i++)
+    for (int i = 0; i < 26; i++)
         estado->transicion[i] = NULL;
 
     return estado;
@@ -52,7 +54,7 @@ EstadoAutomata *estado_crear(EstadoAutomata *padre, char valor_transicion)
 
 Bool estado_transicion_disponible(EstadoAutomata *estado, char valor_transicion)
 {
-    int a = (int)valor_transicion;
+    int a = (int)valor_transicion - 'a';
     EstadoAutomata *b = estado->transicion[a];
     return estado != NULL && (estado->transicion[a]) != NULL;
 }
@@ -64,7 +66,7 @@ Automata automata_crear(FILE *diccionario)
     assert(estado_actual != NULL);
     while (!feof(diccionario))
     {
-        char c = fgetc(diccionario);
+        char c = tolower(fgetc(diccionario));
         // Ya se leyo una palabra
         if (c == '\n' || c == EOF)
         {
@@ -74,8 +76,8 @@ Automata automata_crear(FILE *diccionario)
         else
         {
             if (!estado_transicion_disponible(estado_actual, c))
-                estado_actual->transicion[(int)c] = estado_crear(estado_actual, c);
-            estado_actual = estado_actual->transicion[(int)c];
+                estado_actual->transicion[(int)c - 'a'] = estado_crear(estado_actual, c);
+            estado_actual = estado_actual->transicion[(int)c - 'a'];
         }
     }
     estado_inicial = automata_calcular_transiciones_de_falla(estado_inicial);
@@ -86,7 +88,7 @@ void automata_destruir(Automata automata)
 {
     if (automata != NULL)
     {
-        for (int i = 0; i < 128; i++)
+        for (int i = 0; i < 26; i++)
             automata_destruir(automata->transicion[i]);
         free(automata);
     }
@@ -107,10 +109,11 @@ void void_destroy(void *dato)
 // la raiz
 Automata automata_seguir_transicion(Automata estado, char valor_transicion)
 {
+    assert(estado != NULL);
     while (estado->padre != NULL && !estado_transicion_disponible(estado, valor_transicion))
         estado = estado->transicion_de_falla;
     if (estado_transicion_disponible(estado, valor_transicion))
-        estado = estado->transicion[(int)valor_transicion];
+        estado = estado->transicion[(int)valor_transicion - 'a'];
     return estado;
 }
 
@@ -141,9 +144,9 @@ Automata automata_calcular_transiciones_de_falla(Automata estado_inicial)
             estado_actual->transicion_de_salida = estado_actual->transicion_de_falla->transicion_de_salida;
 
         // Meto los estados que estan conectados por una transicion que no es de falla en la cola
-        for (int i = 0; i < 128; i++)
+        for (int i = 'a'; i <= 'z'; i++)
             if (estado_transicion_disponible(estado_actual, i))
-                c = cola_push(c, estado_actual->transicion[i]);
+                c = cola_push(c, estado_actual->transicion[i - 'a']);
     }
     return estado_inicial;
 }
@@ -160,30 +163,46 @@ void destruir_char(void *dato)
     free(dato);
 }
 
-void procesarCaracteres(Cola *cola, ListaIntervalos *lista_intervalos, FILE *archivo_salida, int letrasADescartar)
+void procesarCaracteres(Cola *cola, HeapIntervalos *heap_intervalos /*ListaIntervalos *lista_intervalos*/, FILE *archivo_salida, int letrasADescartar)
 {
+    int ultimoFin = -1;
     for (int i = 0; i < letrasADescartar; i++)
     {
-        if (lista_intervalos_vacia(*lista_intervalos))
+        if (heap_intervalos_vacio(*heap_intervalos))
             *cola = cola_pop(*cola);
         else
         {
-            Intervalo inter = lista_intervalos_elemento_inicio(*lista_intervalos);
-            while (i < inter.inicio)
+            Intervalo inter = heap_intervalos_obtener_primero(*heap_intervalos);
+            /*printf("%d\n", ultimoFin);
+            for (int j = 0; j < heap_intervalos->ultimo; j++)
+                printf("(%d %d) ", heap_intervalos->array[j].inicio, heap_intervalos->array[j].final);
+            printf("\n\n");*/
+            int seSaltaronLetras = 0;
+            int seProcesaronLetras = 0;
+            while (i < inter.inicio && i < letrasADescartar)
             {
                 *cola = cola_pop(*cola);
                 i++;
+                seSaltaronLetras = 1;
             }
-            while (i < inter.final)
+            while (i < inter.final && i < letrasADescartar)
             {
+                seProcesaronLetras = 1;
                 fputc(*((char *)cola_front(*cola)), archivo_salida);
                 *cola = cola_pop(*cola);
                 i++;
             }
-            fputc(' ', archivo_salida);
-            *lista_intervalos = lista_intervalos_eliminar_inicio(*lista_intervalos);
-            i--;
+            if (seProcesaronLetras)
+            {
+                fputc(' ', archivo_salida);
+                ultimoFin = inter.final;
+                *heap_intervalos = heap_intervalos_eliminar_primero(*heap_intervalos);
+            }
+            if (seSaltaronLetras || seProcesaronLetras)
+                i--;
         }
+        while (!heap_intervalos_vacio(*heap_intervalos) && ultimoFin >= heap_intervalos_obtener_primero(*heap_intervalos).inicio)
+            *heap_intervalos = heap_intervalos_eliminar_primero(*heap_intervalos);
     }
 }
 
@@ -192,7 +211,7 @@ void automata_procesar_archivo(Automata estado_inicial, FILE *archivo_entrada, F
     // Uso una cola para guardar temporalmente los caracteres que pueden formar una palabra a espaciar
     Cola cola = cola_crear(copy_char, destruir_char);
 
-    ListaIntervalos lista_intervalos = lista_intervalos_crear();
+    HeapIntervalos heap_intervalos = heap_intervalos_crear();
 
     // Inicialmente, el estado actual es el inicial y el largo de la ultima
     // palabra encontrada es 0
@@ -207,11 +226,10 @@ void automata_procesar_archivo(Automata estado_inicial, FILE *archivo_entrada, F
         // los caracteres sobrantes, reinciar el automata a como estaba inicialmente
         if (c == '\n' || c == EOF)
         {
-            procesarCaracteres(&cola, &lista_intervalos, archivo_salida, cola_size(cola));
+            procesarCaracteres(&cola, &heap_intervalos, archivo_salida, cola_size(cola));
             // Dejo el automata a como estaba inicialmente
             estado_actual = estado_inicial;
             largo_ultima_palabra_encontrada = 0;
-            lista_intervalos = lista_intervalos_destruir(lista_intervalos);
 
             fputc('\n', archivo_salida);
         }
@@ -225,49 +243,23 @@ void automata_procesar_archivo(Automata estado_inicial, FILE *archivo_entrada, F
             // Sigo la transicion correspondiente al caracter leido y actualizo
             // el largo de la ultima palabra encontrada si es necesario
             int prevLargo = estado_actual->largoPrefijo;
-            estado_actual = automata_seguir_transicion(estado_actual, c);
+            estado_actual = automata_seguir_transicion(estado_actual, tolower(c));
+            int nextLargo = estado_actual->largoPrefijo;
 
             // Si hay letras a descartar es necesario recuperarse de errores
             int letrasADescartar = prevLargo - estado_actual->largoPrefijo + 1;
-            procesarCaracteres(&cola, &lista_intervalos, archivo_salida, letrasADescartar);
+            procesarCaracteres(&cola, &heap_intervalos, archivo_salida, letrasADescartar);
 
             // Se llego a un estado de aceptacion, la palabra aceptada necesariamente contiene todas las palabras vistas
             // hasta el momento, asi que se descartan las palabras encontradas hasta el momento
             if (estado_actual->palabraAceptada)
-            {
-                int lar = estado_actual->largoPrefijo;
-                lista_intervalos = lista_intervalos_destruir(lista_intervalos);
-                lista_intervalos = lista_intervalos_insertar_final(lista_intervalos, 0, estado_actual->largoPrefijo);
-            }
+                heap_intervalos = heap_intervalos_insertar(heap_intervalos, intervalo_crear(0, estado_actual->largoPrefijo));
             // Existe un sufijo propio del prefijo actual que esta en el diccionario
-            else if (estado_actual->transicion_de_salida != NULL)
-            {
-                Intervalo intervalo_a_insertar;
-                EstadoAutomata *estado_salida = estado_actual->transicion_de_salida;
-                int inicioIntervalo = estado_actual->largoPrefijo - estado_salida->largoPrefijo;
-                if (!lista_intervalos_vacia(lista_intervalos))
-                {
-                    // Los intervalos se solapan y empiezan en el mismo punto, prevalece el de mayor largo(que siempre es el estado a insertar)
-                    if (inicioIntervalo == lista_intervalos_elemento_final(lista_intervalos).inicio)
-                        lista_intervalos = lista_intervalos_eliminar_final(lista_intervalos);
-                    else
-                    {
-                        // Busco el primer sufijo propio que es palabra del diccionario y a su vez no se solapa con la ultima palabra encontrada
-                        while (estado_salida != NULL && lista_intervalos_elemento_final(lista_intervalos).final >= inicioIntervalo)
-                        {
-                            estado_salida = estado_salida->transicion_de_salida;
-                            if (estado_salida != NULL)
-                                inicioIntervalo = estado_actual->largoPrefijo - estado_salida->largoPrefijo;
-                        }
-                    }
-                }
-                if (estado_salida != NULL)
-                    // Se encontro un intervalo que cumple con lo pedido
-                    lista_intervalos = lista_intervalos_insertar_final(lista_intervalos, inicioIntervalo, estado_actual->largoPrefijo);
-            }
+            for (EstadoAutomata *estado_salida = estado_actual->transicion_de_salida; estado_salida != NULL; estado_salida = estado_salida->transicion_de_salida)
+                heap_intervalos = heap_intervalos_insertar(heap_intervalos, intervalo_crear(estado_actual->largoPrefijo - estado_salida->largoPrefijo, estado_actual->largoPrefijo));
         }
     }
-    lista_intervalos = lista_intervalos_destruir(lista_intervalos);
+    heap_intervalos_destruir(heap_intervalos);
     cola_destroy(cola);
 }
 

@@ -1,11 +1,11 @@
 #include "listaintervalos.h"
 #include <stdlib.h>
 
-typedef struct _NodoListaIntervalos
+struct _NodoListaIntervalos
 {
     Intervalo dato;
     struct _NodoListaIntervalos *prev, *next;
-} NodoListaIntervalos;
+};
 
 struct _ListaIntervalos
 {

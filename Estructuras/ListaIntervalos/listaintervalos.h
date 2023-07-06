@@ -3,6 +3,7 @@ typedef struct {
     int final;
 } Intervalo;
 
+typedef struct _NodoListaIntervalos NodoListaIntervalos;
 typedef struct _ListaIntervalos ListaIntervalos;
 
 // Los intervalos en la lista se insertan de manera tal que ningun intervalo se solapa con otro
@@ -17,3 +18,6 @@ ListaIntervalos lista_intervalos_eliminar_inicio(ListaIntervalos);
 ListaIntervalos lista_intervalos_eliminar_final(ListaIntervalos);
 Intervalo lista_intervalos_elemento_inicio(ListaIntervalos);
 Intervalo lista_intervalos_elemento_final(ListaIntervalos);
+
+NodoListaIntervalos* lista_intervalos_nodo_final(ListaIntervalos);
+NodoListaIntervalos* lista_intervalos_nodo_anterior(NodoListaIntervalos*);
