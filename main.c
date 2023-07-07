@@ -28,6 +28,7 @@ int main(int argc, char **argv)
                 automata_procesar_archivo(a, entrada, salida);
                 fclose(entrada);
                 fclose(salida);
+                automata_destruir(a);
             }
         }
     }

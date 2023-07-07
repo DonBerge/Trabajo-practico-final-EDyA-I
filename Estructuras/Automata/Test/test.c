@@ -2,13 +2,49 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#define CANT_TEST 4
+#define CANT_TEST 1
+
+void printChar(char c)
+{
+    if (c == '\r')
+        fprintf(stderr, "\\r");
+    else if (c == '\n')
+        fprintf(stderr, "\\n");
+    else if (c == EOF)
+        fprintf(stderr, "EOF");
+    else if (c == ' ')
+        fprintf(stderr, "(espacio)");
+    else if (c == '\t')
+        fprintf(stderr, "\\t");
+    else
+        fprintf(stderr, "%c", c);
+}
 
 int archivos_son_iguales(FILE *arch1, FILE *arch2)
 {
     int son_iguales = 1;
+    int numChar = 1;
     while (son_iguales && !feof(arch1) && !feof(arch2))
-        son_iguales = fgetc(arch1) == fgetc(arch2);
+    {
+        char c1, c2;
+        do
+            c1 = fgetc(arch1);
+        while (c1 == '\r');
+        do
+            c2 = fgetc(arch2);
+        while (c2 == '\r');
+
+        son_iguales = c1 == c2;
+        if (!son_iguales)
+        {
+            fprintf(stderr, "Los archivos son distintos en el %d-esimo caracter(", numChar);
+            printChar(c1);
+            fprintf(stderr, " y ");
+            printChar(c2);
+            fprintf(stderr, ")\n");
+        }
+        numChar++;
+    }
     return son_iguales;
 }
 
@@ -25,34 +61,36 @@ int piso_log10(int n)
 
 int main()
 {
-    char *str = (char *)malloc(sizeof(20 + piso_log10(CANT_TEST)));
+    char *str = (char *)malloc(20 + piso_log10(CANT_TEST));
     assert(str != NULL);
     for (int i = 0; i < CANT_TEST; i++)
     {
         sprintf(str, "./Diccionarios/%d.txt", i + 1);
         FILE *diccionario = fopen(str, "r");
         assert(diccionario != NULL);
-        Automata a = automata_crear(diccionario);
+        Automata automata = automata_crear(diccionario);
         fclose(diccionario);
         sprintf(str, "./Entradas/%d.txt", i + 1);
         FILE *entrada = fopen(str, "r");
         assert(entrada != NULL);
         FILE *salida_automata = fopen("test_salida.txt", "w");
         assert(salida_automata != NULL);
-        automata_procesar_archivo(a, entrada, salida_automata);
+        automata_procesar_archivo(automata, entrada, salida_automata);
+        fclose(entrada);
         fclose(salida_automata);
         salida_automata = fopen("test_salida.txt", "r");
         assert(salida_automata != NULL);
         sprintf(str, "./Salidas/%d.txt", i + 1);
         FILE *salida_test = fopen(str, "r");
-        int archivosSonIguales = archivos_son_iguales(salida_automata,salida_test);
-        if(!archivosSonIguales)
+        int archivosSonIguales = archivos_son_iguales(salida_automata, salida_test);
+        if (!archivosSonIguales)
         {
-            printf("ERROR TEST %d\n",i+1);
+            printf("ERROR TEST %d\n", i + 1);
             assert(0);
         }
         fclose(salida_automata);
         fclose(salida_test);
+        automata_destruir(automata);
     }
     free(str);
     return 0;

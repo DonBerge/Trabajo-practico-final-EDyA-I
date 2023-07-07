@@ -69,28 +69,35 @@ Automata automata_crear(FILE *diccionario)
         char c = tolower(fgetc(diccionario));
 
         // Solo se permiten caracteres de fin de linea/archivo o letras del abecedario
-        assert(c == '\n' || c == EOF || ('a' <= c && c <= 'z'));
-
-        // Ya se leyo una palabra
-        if (c == '\n' || c == EOF)
+        if (!(c == '\r' || c == '\n' || c == EOF || ('a' <= c && c <= 'z')))
         {
-            // La palabra vacia no puede ser aceptada por el automata, asi que si se ingreso
-            // una linea vacia esta se saltea, de lo contrario el estado actual es un estado
-            // de aceptacion
-            if (estadoActual != estadoInicial)
-            {
-                estadoActual->palabraAceptada = 1;
-                // Pongo el estado actual a la raiz para procesar otra palabra
-                estadoActual = estadoInicial;
-            }
+            fprintf(stderr, "CARACTER INVALIDO %c(%d)\n", c, c);
+            assert(0);
         }
-        else
+
+        if (c != '\r')
         {
-            // Si no hay una transicion por el caracter c, se crea un estado para esta transicion
-            // y se conectan el estado actual y el nuevo estado por el caracter c
-            if (!estado_transicion_disponible(estadoActual, c))
-                estadoActual->transicion[(int)c - 'a'] = estado_crear(estadoActual, c);
-            estadoActual = estadoActual->transicion[(int)c - 'a'];
+            // Ya se leyo una palabra
+            if (c == '\n' || c == EOF)
+            {
+                // La palabra vacia no puede ser aceptada por el automata, asi que si se ingreso
+                // una linea vacia esta se saltea, de lo contrario el estado actual es un estado
+                // de aceptacion
+                if (estadoActual != estadoInicial)
+                {
+                    estadoActual->palabraAceptada = 1;
+                    // Pongo el estado actual a la raiz para procesar otra palabra
+                    estadoActual = estadoInicial;
+                }
+            }
+            else
+            {
+                // Si no hay una transicion por el caracter c, se crea un estado para esta transicion
+                // y se conectan el estado actual y el nuevo estado por el caracter c
+                if (!estado_transicion_disponible(estadoActual, c))
+                    estadoActual->transicion[(int)c - 'a'] = estado_crear(estadoActual, c);
+                estadoActual = estadoActual->transicion[(int)c - 'a'];
+            }
         }
     }
     // Ya no se ingresan mas palabras, procedo a calcular las transiciones de falla y salida
@@ -114,14 +121,14 @@ void automata_destruir(Automata automata)
     return dato;
 }*/
 
-void copy_id(void** dato1, void* dato2)
+void copy_id(void **dato1, void *dato2)
 {
     *dato1 = dato2;
 }
 
 void void_destroy(void *dato)
 {
-    return;
+    dato = dato;
 }
 
 // Toma un estado del automata y un caracter y sigue la trasicion correspondiente si es que existe,
@@ -174,6 +181,7 @@ Automata automata_calcular_transiciones_adicionales(Automata estadoInicial)
             if (estado_transicion_disponible(estadoActual, i))
                 colaEstados = cola_push(colaEstados, estadoActual->transicion[i - 'a']);
     }
+    cola_destroy(colaEstados);
     return estadoInicial;
 }
 
@@ -184,13 +192,13 @@ Automata automata_calcular_transiciones_adicionales(Automata estadoInicial)
     return c;
 }*/
 
-void copy_char(void** dato1, void *dato2)
+void copy_char(void **dato1, void *dato2)
 {
     char *c = *dato1;
-    if(c == NULL)
-        c = (char*)malloc(sizeof(char));
+    if (c == NULL)
+        c = (char *)malloc(sizeof(char));
     *c = *((char *)dato2);
-    *dato1 = (void*)c;
+    *dato1 = (void *)c;
 }
 
 void destruir_char(void *dato)
@@ -272,13 +280,26 @@ void automata_procesar_archivo(Automata estadoInicial, FILE *archivoEntrada, FIL
     {
         char c = fgetc(archivoEntrada);
 
-        // Solo se aceptan letras del alfabeto o un fin de linea/archivo
-        assert(c == '\n' || c == EOF || ('a' <= tolower(c) && tolower(c) <= 'z'));
+        // if (c == '\r' || c == '\n')
+        //     printf("%s(%d)\n", c == '\r' ? "\\r" : "\\n", c);
+        // else if (c == EOF)
+        //     printf("EOF\n");
+        // else
+        //     printf("%c(%d)\n", c, c);
+
+        // Solo se permiten caracteres de fin de linea/archivo o letras del abecedario
+        if (!(c == '\r' || c == '\n' || c == EOF || ('a' <= tolower(c) && tolower(c) <= 'z')))
+        {
+            fprintf(stderr, "CARACTER INVALIDO %c(%d)\n", c, c);
+            assert(0);
+        }
 
         // Si llegue al fin de una linea o al fin del archivo, hay que consumir
         // los caracteres sobrantes y reinciar el automata a como estaba inicialmente
-        if (c == '\n' || c == EOF)
+        if (c == '\r' || c == '\n' || c == EOF)
         {
+            if (c == '\r')
+                fgetc(archivoEntrada);
             procesarCaracteres(&cola, &heapIntervalos, archivoSalida, cola_size(cola), &seEncontroUnaPalabra);
             // Imprimo un caracter de fin de linea si es necesario
             if (c != EOF)

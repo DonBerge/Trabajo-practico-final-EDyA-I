@@ -333,11 +333,14 @@ for c in re:
     
 text = text.replace("\n\n", '\n')
     
-text = text.replace(' ',' ')
+text = text.replace('\n',' ')
+
+palabras = list(set(text.split(' ')))
 
 #text = text.replace(' ','\n')
 #text = text.replace("\n\n"," ");
 #text = text.replace(' ','')
     
 with open("salida_python.txt", "w") as sys.stdout:
-    print(text)
+    for palabra in palabras:
+        print(palabra)
