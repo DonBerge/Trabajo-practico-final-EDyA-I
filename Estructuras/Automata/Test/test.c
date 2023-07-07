@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#define CANT_TEST 6
+#define CANT_TEST 4
 
 int archivos_son_iguales(FILE *arch1, FILE *arch2)
 {

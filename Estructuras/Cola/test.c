@@ -1,5 +1,6 @@
 #include "cola.c"
 #include <assert.h>
+#include <stdio.h>
 void cpy_int(void** a, void* b)
 {
     int* ia = *a;
@@ -19,11 +20,17 @@ int main()
     int x[] = {1,2,3,4,5,6,7,8,9,10};
     int n = sizeof(x)/sizeof(int);
     Cola c = cola_crear(cpy_int,dst_int);
+    c = cola_push(c,x+5);
+    c = cola_pop(c);
+    c = cola_push(c,x+4);
+    cola_destroy(c);
+    c = cola_crear(cpy_int,dst_int);
     for(int i=0;i<n;i++)
         c = cola_push(c,x+i);
     for(int i=0;i<n/2;i++)
     {
         int* dato = (int*)cola_front(c);
+        //printf("%d ",*dato);
         assert(*dato == x[i]);
         c = cola_pop(c);
     }

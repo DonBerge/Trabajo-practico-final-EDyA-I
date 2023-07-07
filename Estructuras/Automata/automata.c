@@ -109,9 +109,14 @@ void automata_destruir(Automata automata)
     }
 }
 
-void *copy_id(void *dato)
+/*void *copy_id(void *dato)
 {
     return dato;
+}*/
+
+void copy_id(void** dato1, void* dato2)
+{
+    *dato1 = dato2;
 }
 
 void void_destroy(void *dato)
@@ -172,11 +177,20 @@ Automata automata_calcular_transiciones_adicionales(Automata estadoInicial)
     return estadoInicial;
 }
 
-void *copy_char(void *dato)
+/*void *copy_char(void *dato)
 {
     char *c = (char *)malloc(sizeof(char));
     *c = *((char *)dato);
     return c;
+}*/
+
+void copy_char(void** dato1, void *dato2)
+{
+    char *c = *dato1;
+    if(c == NULL)
+        c = (char*)malloc(sizeof(char));
+    *c = *((char *)dato2);
+    *dato1 = (void*)c;
 }
 
 void destruir_char(void *dato)

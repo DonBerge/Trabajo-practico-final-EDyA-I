@@ -41,7 +41,7 @@ int cola_empty(Cola c)
 
 Cola cola_push(Cola c, void *dato)
 {
-    ColaNode *node = (ColaNode *)malloc(sizeof(ColaNode));
+    /*ColaNode *node = (ColaNode *)malloc(sizeof(ColaNode));
     node->dato = c.copy(dato);
     if (c.size == 0)
     {
@@ -54,13 +54,46 @@ Cola cola_push(Cola c, void *dato)
         c.back->sig = node;
         c.back = node;
     }
+    c.size++;*/
+    ColaNode *node;
+    if (c.front == NULL && c.back == NULL)
+    {
+        node = (ColaNode *)malloc(sizeof(ColaNode));
+        node->dato = NULL;
+        c.copy(&(node->dato), dato);
+        node->sig = node;
+        c.front = node;
+        c.back = node;
+    }
+    else
+    {
+        if (c.front == NULL)
+        {
+            c.front = c.back;
+            c.copy(&(c.front->dato), dato);
+        }
+        else if (c.back->sig == c.front)
+        {
+            node = (ColaNode *)malloc(sizeof(ColaNode));
+            node->dato = NULL;
+            c.copy(&(node->dato), dato);
+            c.back->sig = node;
+            node->sig = c.front;
+            c.back = node;
+        }
+        else
+        {
+            c.copy(&(c.back->sig->dato), dato);
+            c.back = c.back->sig;
+        }
+    }
     c.size++;
     return c;
 }
 
 Cola cola_pop(Cola c)
 {
-    if (c.size != 0)
+    /*if (c.size != 0)
     {
         ColaNode *nodeToDestroy = c.front;
         if (c.size == 1)
@@ -75,7 +108,12 @@ Cola cola_pop(Cola c)
         c.size--;
         c.destroy(nodeToDestroy->dato);
         free(nodeToDestroy);
-    }
+    }*/
+    if (c.front == c.back)
+        c.front = NULL;
+    else
+        c.front = c.front->sig;
+    c.size--;
     return c;
 }
 
@@ -91,8 +129,18 @@ void *cola_back(Cola c)
 
 void cola_destroy(Cola c)
 {
-    while (!cola_empty(c))
-        c = cola_pop(c);
+    if (c.back != NULL)
+    {
+        for (ColaNode *node = c.back->sig; node != c.back;)
+        {
+            ColaNode *nodeToDestroy = node;
+            node = node->sig;
+            c.destroy(nodeToDestroy->dato);
+            free(nodeToDestroy);
+        }
+        c.destroy(c.back->dato);
+        free(c.back);
+    }
 }
 
 #endif
