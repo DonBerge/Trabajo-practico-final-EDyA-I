@@ -140,10 +140,10 @@ Automata automata_calcular_transiciones_adicionales(Automata estadoInicial)
     // la funcion de copia es la identidad y la funcion destructora no hace
     // nada
     Cola colaEstados = cola_crear(copy_id, void_destroy);
-    
+
     // Meto el estado inicial en la cola
     colaEstados = cola_push(colaEstados, estadoInicial);
-    
+
     while (!cola_empty(colaEstados))
     {
         Automata estadoActual = (Automata)cola_front(colaEstados);
@@ -167,7 +167,7 @@ Automata automata_calcular_transiciones_adicionales(Automata estadoInicial)
         // Meto los estados que estan conectados por una transicion que no es de falla en la cola
         for (int i = 'a'; i <= 'z'; i++)
             if (estado_transicion_disponible(estadoActual, i))
-                colaEstados = cola_push(c, estadoActual->transicion[i - 'a']);
+                colaEstados = cola_push(colaEstados, estadoActual->transicion[i - 'a']);
     }
     return estadoInicial;
 }
@@ -184,32 +184,32 @@ void destruir_char(void *dato)
     free(dato);
 }
 
-void procesarCaracteres(Cola *cola, HeapIntervalos *heap_intervalos, FILE *archivo_salida, int letrasADescartar, int *imprimirEspacio)
+void procesarCaracteres(Cola *cola, HeapIntervalos *heapIntervalos, FILE *archivoSalida, int letrasADescartar, int *imprimirEspacio)
 {
     // Posicion del ultimo caracter procesado
     int ultimoFin = -1;
-    for (int i = 0; i < letrasADescartar ; i++)
+    for (int i = 0; i < letrasADescartar && !cola_empty(*cola); i++)
     {
         // Si no hay intervalos para procesar, se descartan caracteres
-        if (heap_intervalos_vacio(*heap_intervalos))
+        if (heap_intervalos_vacio(*heapIntervalos))
             *cola = cola_pop(*cola);
         else
         {
             // Obtengo el intervalo a procesar
-            Intervalo inter = heap_intervalos_obtener_primero(*heap_intervalos);
+            Intervalo inter = heap_intervalos_obtener_primero(*heapIntervalos);
             int seProcesaranLetras = inter.inicio <= letrasADescartar;
 
             // Si se procesaran letras, entonces hay que imprimir un espacio si es necesario
             if (seProcesaranLetras)
             {
                 if (*imprimirEspacio)
-                    fputc(' ', archivo_salida);
+                    fputc(' ', archivoSalida);
                 // Se va a imprimir una palabra, todas las palabras siguientes tienen que tener un espacio
                 *imprimirEspacio = 1;
             }
 
             // Descarto los caracteres que no se van a procesar
-            while (i < inter.inicio && i < letrasADescartar)
+            while (i < inter.inicio && i < letrasADescartar && !cola_empty(*cola))
             {
                 *cola = cola_pop(*cola);
                 i++;
@@ -218,9 +218,9 @@ void procesarCaracteres(Cola *cola, HeapIntervalos *heap_intervalos, FILE *archi
             // Los caracteres que se van a procesar se imprimen
             if (seProcesaranLetras)
             {
-                while (i <= inter.final)
+                while (i <= inter.final && !cola_empty(*cola))
                 {
-                    fputc(*((char *)cola_front(*cola)), archivo_salida);
+                    fputc(*((char *)cola_front(*cola)), archivoSalida);
                     *cola = cola_pop(*cola);
                     i++;
                 }
@@ -229,24 +229,24 @@ void procesarCaracteres(Cola *cola, HeapIntervalos *heap_intervalos, FILE *archi
             }
         }
         // Puede haber intervalos que se solapen con la ultima palabra procesada, de ser asi, tienen que ser eliminados de la cola de prioridad
-        while (!heap_intervalos_vacio(*heap_intervalos) && ultimoFin >= heap_intervalos_obtener_primero(*heap_intervalos).inicio)
-            *heap_intervalos = heap_intervalos_eliminar_primero(*heap_intervalos);
+        while (!heap_intervalos_vacio(*heapIntervalos) && ultimoFin >= heap_intervalos_obtener_primero(*heapIntervalos).inicio)
+            *heapIntervalos = heap_intervalos_eliminar_primero(*heapIntervalos);
     }
     // Sustrae todos los intervalos una cierta cantidad para que queden alineados a la siguiente palabra
-    *heap_intervalos = heap_intervalos_sustraer(*heap_intervalos, letrasADescartar);
+    *heapIntervalos = heap_intervalos_sustraer(*heapIntervalos, letrasADescartar);
 }
 
-void automata_procesar_archivo(Automata estado_inicial, FILE *archivo_entrada, FILE *archivo_salida)
+void automata_procesar_archivo(Automata estadoInicial, FILE *archivoEntrada, FILE *archivoSalida)
 {
     // Uso una cola para guardar temporalmente los caracteres que pueden formar una palabra a espaciar
     Cola cola = cola_crear(copy_char, destruir_char);
 
     // heap_intervalos es usado como una cola de prioridad, permite obtener los intervalos que tienen menor coordenada
     // inicial y que tienen mayor largo
-    HeapIntervalos heap_intervalos = heap_intervalos_crear();
+    HeapIntervalos heapIntervalos = heap_intervalos_crear();
 
     // Inicialmente, el estado actual es el inicial
-    Automata estado_actual = estado_inicial;
+    Automata estadoActual = estadoInicial;
 
     // Si esta variable tiene valor 1, se imprimira un espacio antes de mostrar una palabra encontrada
     // Cuando se encuentra e imprime la primer palabra, su valor cambia a 1. De esta forma la segunda palabra en adelante
@@ -254,9 +254,9 @@ void automata_procesar_archivo(Automata estado_inicial, FILE *archivo_entrada, F
     int seEncontroUnaPalabra = 0;
 
     // Empiezo a leer el archivo de entrada
-    while (!feof(archivo_entrada))
+    while (!feof(archivoEntrada))
     {
-        char c = fgetc(archivo_entrada);
+        char c = fgetc(archivoEntrada);
 
         // Solo se aceptan letras del alfabeto o un fin de linea/archivo
         assert(c == '\n' || c == EOF || ('a' <= tolower(c) && tolower(c) <= 'z'));
@@ -265,13 +265,13 @@ void automata_procesar_archivo(Automata estado_inicial, FILE *archivo_entrada, F
         // los caracteres sobrantes y reinciar el automata a como estaba inicialmente
         if (c == '\n' || c == EOF)
         {
-            procesarCaracteres(&cola, &heap_intervalos, archivo_salida, cola_size(cola), &seEncontroUnaPalabra);
+            procesarCaracteres(&cola, &heapIntervalos, archivoSalida, cola_size(cola), &seEncontroUnaPalabra);
             // Imprimo un caracter de fin de linea si es necesario
             if (c != EOF)
-                fputc('\n', archivo_salida);
+                fputc('\n', archivoSalida);
             // Dejo el automata a como estaba inicialmente
             seEncontroUnaPalabra = 0;
-            estado_actual = estado_inicial;
+            estadoActual = estadoInicial;
         }
         // Si no llegue al fin de linea o al fin del archivo entonces proceso
         // el caracter
@@ -282,24 +282,25 @@ void automata_procesar_archivo(Automata estado_inicial, FILE *archivo_entrada, F
 
             // Sigo la transicion correspondiente al caracter leido y actualizo
             // el largo de la ultima palabra encontrada si es necesario
-            int prevLargo = estado_actual->largoPrefijo;
-            estado_actual = automata_seguir_transicion(estado_actual, tolower(c));
+            int prevLargo = estadoActual->largoPrefijo;
+            estadoActual = automata_seguir_transicion(estadoActual, tolower(c));
 
             // Si hay letras a descartar es necesario recuperarse de errores
-            int letrasADescartar = prevLargo - estado_actual->largoPrefijo + 1;
+            int letrasADescartar = prevLargo - estadoActual->largoPrefijo + 1;
+
             // Proceso los caracteres si es necesario
-            procesarCaracteres(&cola, &heap_intervalos, archivo_salida, letrasADescartar, &seEncontroUnaPalabra);
+            procesarCaracteres(&cola, &heapIntervalos, archivoSalida, letrasADescartar, &seEncontroUnaPalabra);
 
             // Se llego a un estado de aceptacion, meto el intervalo que representa la palabra actual a la lista de intervalos
-            if (estado_actual->palabraAceptada)
-                heap_intervalos = heap_intervalos_insertar(heap_intervalos, intervalo_crear(0, estado_actual->largoPrefijo - 1));
+            if (estadoActual->palabraAceptada)
+                heapIntervalos = heap_intervalos_insertar(heapIntervalos, intervalo_crear(0, estadoActual->largoPrefijo - 1));
             // Si existe algun sufijo propio de la palabra actual que esta en el diccionario, se inserta su intervalo correspondiente en la cola
             // de prioridad
-            for (EstadoAutomata *estado_salida = estado_actual->transicion_de_salida; estado_salida != NULL; estado_salida = estado_salida->transicion_de_salida)
-                heap_intervalos = heap_intervalos_insertar(heap_intervalos, intervalo_crear(estado_actual->largoPrefijo - estado_salida->largoPrefijo, estado_actual->largoPrefijo - 1));
+            for (EstadoAutomata *estado_salida = estadoActual->transicionDeSalida; estado_salida != NULL; estado_salida = estado_salida->transicionDeSalida)
+                heapIntervalos = heap_intervalos_insertar(heapIntervalos, intervalo_crear(estadoActual->largoPrefijo - estado_salida->largoPrefijo, estadoActual->largoPrefijo - 1));
         }
     }
-    heap_intervalos_destruir(heap_intervalos);
+    heap_intervalos_destruir(heapIntervalos);
     cola_destroy(cola);
 }
 

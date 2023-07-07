@@ -43,9 +43,9 @@ Cola cola_push(Cola c, void *dato)
 {
     ColaNode *node = (ColaNode *)malloc(sizeof(ColaNode));
     node->dato = c.copy(dato);
-    node->sig = NULL;
     if (c.size == 0)
     {
+        node->sig = node;
         c.front = node;
         c.back = node;
     }
@@ -62,7 +62,7 @@ Cola cola_pop(Cola c)
 {
     if (c.size != 0)
     {
-        ColaNode *node_to_destroy = c.front;
+        ColaNode *nodeToDestroy = c.front;
         if (c.size == 1)
         {
             c.front = NULL;
@@ -73,8 +73,8 @@ Cola cola_pop(Cola c)
             c.front = c.front->sig;
         }
         c.size--;
-        c.destroy(node_to_destroy->dato);
-        free(node_to_destroy);
+        c.destroy(nodeToDestroy->dato);
+        free(nodeToDestroy);
     }
     return c;
 }
@@ -89,15 +89,9 @@ void *cola_back(Cola c)
     return c.back->dato;
 }
 
-void cola_visitar(Cola c, FuncionVisitante visit)
-{
-    for (ColaNode *i = c.front; i != NULL; i = i->sig)
-        visit(i->dato);
-}
-
 void cola_destroy(Cola c)
 {
-    while (c.size)
+    while (!cola_empty(c))
         c = cola_pop(c);
 }
 

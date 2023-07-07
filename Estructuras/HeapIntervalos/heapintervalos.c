@@ -59,13 +59,15 @@ int heap_intervalos_vacio(HeapIntervalos heap)
     return heap.ultimo == 0;
 }
 
+// Hace trepar un nodo del heap si no cumple la invariante heap, cambiandolo con sus ancestros
+// que tienen menor prioridad
 void heap_intervalos_trepar_elemento(Intervalo* array, int index)
 {
     int trepo = 1;
     for(int i = index; i>0 && trepo; i = (i-1)/2)
-        if(intervalo_comparar(array[(i-1)/2],array[i]) == 1)/*compare(array[(i-1)/2],array[i]) == -1*/
+        // Si el nodo actual tiene mayor prioridad que su padre, entonces los intercambio
+        if(intervalo_comparar(array[(i-1)/2],array[i]) == 1)
         {
-            // Hago trepar el nodo
             Intervalo temp = array[(i-1)/2];
             array[(i-1)/2]=array[i];
             array[i]=temp;
@@ -79,20 +81,26 @@ Intervalo heap_intervalos_obtener_primero(HeapIntervalos heap)
     return heap.array[0];
 }
 
+// Hunde un nodo en el heap si no cumple la invariante heap, cambiandolo con los hijos que tienen mayor
+// prioridad que el
 HeapIntervalos heap_intervalos_hundir_elemento(HeapIntervalos h, int index)
 {
     int seHundio = 1;
     for(int i=index; i<h.ultimo && seHundio; )
     {
+        // Comparo el nodo actual con sus dos hijos y obtengo el mas grande
         int largest = i;
         if(i*2+1 < h.ultimo && intervalo_comparar(h.array[largest],h.array[i*2+1])==1)
             largest = i*2+1;
         if(i*2+2 < h.ultimo && intervalo_comparar(h.array[largest],h.array[i*2+2])==1)
             largest = i*2+2;
+
+        // Si el nodo actual es el mas grande entonces no hay que hundirlo
         if(largest == i)
             seHundio = 0;
         else
         {
+            // En caso contrario lo cambio con su hijo mas grande
             Intervalo temp = h.array[largest];
             h.array[largest] = h.array[i];
             h.array[i] = temp;
@@ -104,11 +112,14 @@ HeapIntervalos heap_intervalos_hundir_elemento(HeapIntervalos h, int index)
 
 HeapIntervalos heap_intervalos_insertar(HeapIntervalos heap, Intervalo inter)
 {
+    // Redimensiono el heap si es necesario
     if(heap.ultimo == heap.capacidad)
     {
         heap.capacidad = (heap.capacidad == 0) ? 1 : heap.capacidad * 2;
         heap.array = realloc(heap.array, sizeof(Intervalo)*heap.capacidad);
     }
+
+    // Meto el nuevo intervalo en el fondo del heap y lo hago trepar
     heap.array[heap.ultimo] = inter;
     heap_intervalos_trepar_elemento(heap.array,heap.ultimo);
     heap.ultimo++;
@@ -119,6 +130,8 @@ HeapIntervalos heap_intervalos_eliminar_primero(HeapIntervalos heap)
 {
     if(heap.ultimo != 0)
     {
+        // El intervalo a eliminar es el que esta al inicio del heap, para eliminarlo
+        // lo sobreescribo con el ultimo intervalo del heap y luego lo hundo
         heap.array[0] = heap.array[--heap.ultimo];
         heap = heap_intervalos_hundir_elemento(heap,0);
     }
@@ -127,6 +140,7 @@ HeapIntervalos heap_intervalos_eliminar_primero(HeapIntervalos heap)
 
 HeapIntervalos heap_intervalos_sustraer(HeapIntervalos heap, int cant)
 {
+    // Recorro cada intervalo del heap y le sustraigo la cantidad pasada
     for(int i=0;cant != 0 && i<heap.ultimo;i++)
     {
         heap.array[i].inicio-=cant;
