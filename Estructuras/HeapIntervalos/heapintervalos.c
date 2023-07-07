@@ -1,3 +1,5 @@
+#ifndef __HEAP_INTERVALOS_C__
+#define __HEAP_INTERVALOS_C__
 #include "heapintervalos.h"
 #include <stdlib.h>
 
@@ -122,3 +124,15 @@ HeapIntervalos heap_intervalos_eliminar_primero(HeapIntervalos heap)
     }
     return heap;
 }
+
+HeapIntervalos heap_intervalos_sustraer(HeapIntervalos heap, int cant)
+{
+    for(int i=0;cant != 0 && i<heap.ultimo;i++)
+    {
+        heap.array[i].inicio-=cant;
+        heap.array[i].final-=cant;
+    }
+    return heap;
+}
+
+#endif

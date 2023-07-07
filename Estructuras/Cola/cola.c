@@ -1,3 +1,5 @@
+#ifndef __COLA__C__
+#define __COLA__C__
 #include "cola.h"
 #include <stdlib.h>
 
@@ -98,3 +100,5 @@ void cola_destroy(Cola c)
     while (c.size)
         c = cola_pop(c);
 }
+
+#endif

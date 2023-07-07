@@ -8,8 +8,8 @@ typedef struct _EstadoAutomata* Automata;
 Automata automata_crear(FILE*);
 // Destruye un automata pasado por argumento
 void automata_destruir(Automata);
-// Calcula las transiciones de falla del automata
-Automata automata_calcular_transiciones_de_falla(Automata);
+// Calcula las transiciones de falla y salida del automata
+Automata automata_calcular_transiciones_adicionales(Automata);
 // Toma un archivo de entrada con las palabras a procesar y un
 // archivo de salida donde se guardan las palabras espaciadas
 void automata_procesar_archivo(Automata,FILE*,FILE*);
