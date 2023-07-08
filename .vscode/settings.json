@@ -5,7 +5,8 @@
         "map.h": "c",
         "stdlib.h": "c",
         "stdio.h": "c",
-        "assert.h": "c"
+        "assert.h": "c",
+        "heapintervalos.h": "c"
     },
     "cSpell.language": "en,es-ES",
     "cSpell.ignoreWords": [

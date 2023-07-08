@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#define CANT_TEST 1
+#define CANT_TEST 6
 
 void printChar(char c)
 {
@@ -63,6 +63,7 @@ int main()
 {
     char *str = (char *)malloc(20 + piso_log10(CANT_TEST));
     assert(str != NULL);
+    int testsAceptados = 0;
     for (int i = 0; i < CANT_TEST; i++)
     {
         sprintf(str, "./Diccionarios/%d.txt", i + 1);
@@ -84,14 +85,17 @@ int main()
         FILE *salida_test = fopen(str, "r");
         int archivosSonIguales = archivos_son_iguales(salida_automata, salida_test);
         if (!archivosSonIguales)
+            printf("ERROR EN EL TEST %d\n", i + 1);
+        else
         {
-            printf("ERROR TEST %d\n", i + 1);
-            assert(0);
+            printf("PASO EL TEST %d\n",i+1);
+            testsAceptados++;
         }
         fclose(salida_automata);
         fclose(salida_test);
         automata_destruir(automata);
     }
+    printf("Pasaron %d de %d test\n",testsAceptados,CANT_TEST);
     free(str);
     return 0;
 }

@@ -6,12 +6,16 @@
 
 // Estructura que representa al intervalo, junto a una funciones para crearlos
 // y compararlos
-typedef struct _Intervalo Intervalo;
+typedef struct {
+    int inicio;
+    int final;
+} Intervalo;
+
 Intervalo intervalo_crear(int inicio,int final);
 int intervalo_comparar(Intervalo, Intervalo);
 
 // Estructura que representa al heap
-typedef struct _HeapIntervalos HeapIntervalos;
+typedef struct _HeapIntervalos* HeapIntervalos;
 
 // Crea un heap de intervalos
 HeapIntervalos heap_intervalos_crear();
@@ -33,4 +37,7 @@ HeapIntervalos heap_intervalos_eliminar_primero(HeapIntervalos);
 
 // Mueve todos los intervalos del heap una cierta cantidad de pasos hacia la izquierda
 HeapIntervalos heap_intervalos_sustraer(HeapIntervalos, int);
+
+int heap_intervalos_size(HeapIntervalos);
+
 #endif

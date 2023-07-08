@@ -1,12 +1,26 @@
 #ifndef __COLA__H__
 #define __COLA__H__
-typedef struct _Cola Cola;
 
 // Toma dos direcciones, mete el valor de la segunda direccion en la primera direccion, si la primera
 // direccion apunta a NULL, se reserva memoria para que pueda guardar el dato
 typedef void (*FuncionCopia)(void**, void*);
 // Libera la memoria dinamica reservada en la direccion pasada como argumento, si es necesario
 typedef void (*FuncionDestructora)(void*);
+
+typedef struct _ColaNode
+{
+    void *dato;
+    struct _ColaNode *sig;
+} ColaNode;
+
+typedef struct
+{
+    ColaNode* front;
+    ColaNode* back;
+    FuncionCopia copy;
+    FuncionDestructora destroy;
+    int size;
+} Cola;
 
 Cola cola_crear(FuncionCopia,FuncionDestructora);
 int cola_empty();

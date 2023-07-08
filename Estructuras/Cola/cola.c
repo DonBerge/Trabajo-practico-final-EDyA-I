@@ -3,21 +3,6 @@
 #include "cola.h"
 #include <stdlib.h>
 
-typedef struct _ColaNode
-{
-    void *dato;
-    struct _ColaNode *sig;
-} ColaNode;
-
-struct _Cola
-{
-    ColaNode *front;
-    ColaNode *back;
-    FuncionCopia copy;
-    FuncionDestructora destroy;
-    int size;
-};
-
 Cola cola_crear(FuncionCopia copy, FuncionDestructora destroy)
 {
     Cola c;

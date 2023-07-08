@@ -335,7 +335,7 @@ text = text.replace("\n\n", '\n')
     
 text = text.replace('\n',' ')
 
-palabras = list(set(text.split(' ')))
+palabras = list((text.split(' ')))
 
 #text = text.replace(' ','\n')
 #text = text.replace("\n\n"," ");
