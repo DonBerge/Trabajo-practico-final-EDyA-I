@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "Estructuras/Automata/automata.c"
+#include "Estructuras/Automata/automata.h"
 
 int main(int argc, char **argv)
 {
@@ -13,16 +13,25 @@ int main(int argc, char **argv)
     {
         FILE *diccionario = fopen(argv[1], "r");
         if (diccionario == NULL)
-            printf("No se encontro el archivo de diccionario %s", argv[1]);
+        {
+            fprintf(stderr,"No se encontro el archivo de diccionario %s\n", argv[1]);
+            return 1;
+        }
         else
         {
             Automata a = automata_crear(diccionario);
             fclose(diccionario);
             FILE *entrada = fopen(argv[2], "r"), *salida = fopen(argv[3], "w");
             if (entrada == NULL)
-                printf("No se encontro el archivo de entrada %s\n", argv[2]);
+            {
+                fprintf(stderr,"No se encontro el archivo de entrada %s\n", argv[2]);
+                return 1;
+            }
             else if (salida == NULL)
-                printf("Error al crear el archivo de salida %s\n", argv[3]);
+            {
+                fprintf(stderr,"Error al crear el archivo de salida %s\n", argv[3]);
+                return 1;
+            }
             else
             {
                 automata_procesar_archivo(a, entrada, salida);

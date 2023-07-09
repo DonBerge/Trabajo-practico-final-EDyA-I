@@ -6,10 +6,8 @@
 #include <stdlib.h>
 
 #include "automata.h"
-#include "../Cola/cola.c"
-#include "../HeapIntervalos/heapintervalos.c"
-
-#define DEBUG 0
+#include "../Cola/cola.h"
+#include "../BolsaIntervalos/Heap/bolsaintervalos.h"
 
 typedef struct _EstadoAutomata
 {
@@ -129,9 +127,9 @@ void copy_id(void **dato1, void *dato2)
     *dato1 = dato2;
 }
 
-void void_destroy(void *dato)
+void void_destroy(void* dato __attribute__((unused)))
 {
-    dato = dato;
+    return;
 }
 
 // Toma un estado del automata y un caracter y sigue la trasicion correspondiente si es que existe,
@@ -204,25 +202,24 @@ void copy_char(void **dato1, void *dato2)
     *dato1 = (void *)c;
 }
 
-void destruir_char(void *dato)
+void destruir_char(void* dato)
 {
     free(dato);
 }
 
-void procesarCaracteres(Cola *cola, HeapIntervalos *heapIntervalos, FILE *archivoSalida, int letrasADescartar, int *imprimirEspacio, int indice)
+void procesarCaracteres(Cola *cola, BolsaIntervalos *bolsaIntervalos, FILE *archivoSalida, int letrasADescartar, int *imprimirEspacio, int indice)
 {
     // Posicion del ultimo caracter procesado
     int ultimoFin = -1;
-    int lb = 0;
     for (int i = 0; i < letrasADescartar && !cola_empty(*cola); i++)
     {
         // Si no hay intervalos para procesar, se descartan caracteres
-        if (heap_intervalos_vacio(*heapIntervalos))
+        if (bolsa_intervalos_vacia(*bolsaIntervalos))
             *cola = cola_pop(*cola);
         else
         {
             // Obtengo el intervalo a procesar
-            Intervalo inter = heap_intervalos_obtener_primero(*heapIntervalos);
+            Intervalo inter = bolsa_intervalos_obtener_primero(*bolsaIntervalos);
             int seProcesaranLetras = inter.inicio <= letrasADescartar + indice;
 
             // Si se procesaran letras, entonces hay que imprimir un espacio si es necesario
@@ -255,9 +252,9 @@ void procesarCaracteres(Cola *cola, HeapIntervalos *heapIntervalos, FILE *archiv
             }
         }
         // Puede haber intervalos que se solapen con la ultima palabra procesada, de ser asi, tienen que ser eliminados de la cola de prioridad
-        while (!heap_intervalos_vacio(*heapIntervalos) && (heap_intervalos_obtener_primero(*heapIntervalos).inicio <= indice || ultimoFin >= heap_intervalos_obtener_primero(*heapIntervalos).inicio))
+        while (!bolsa_intervalos_vacia(*bolsaIntervalos) && (bolsa_intervalos_obtener_primero(*bolsaIntervalos).inicio <= indice || ultimoFin >= bolsa_intervalos_obtener_primero(*bolsaIntervalos).inicio))
         {
-            *heapIntervalos = heap_intervalos_eliminar_primero(*heapIntervalos);
+            *bolsaIntervalos = bolsa_intervalos_eliminar_primero(*bolsaIntervalos);
         }
     }
 }
@@ -269,7 +266,7 @@ void automata_procesar_archivo(Automata estadoInicial, FILE *archivoEntrada, FIL
 
     // heap_intervalos es usado como una cola de prioridad, permite obtener los intervalos que tienen menor coordenada
     // inicial y que tienen mayor largo
-    HeapIntervalos heapIntervalos = heap_intervalos_crear();
+    BolsaIntervalos bolsaIntervalos = bolsa_intervalos_crear(10);
 
     // Inicialmente, el estado actual es el inicial
     Automata estadoActual = estadoInicial;
@@ -287,13 +284,6 @@ void automata_procesar_archivo(Automata estadoInicial, FILE *archivoEntrada, FIL
     {
         char c = fgetc(archivoEntrada);
 
-        // if (c == '\r' || c == '\n')
-        //     printf("%s(%d)\n", c == '\r' ? "\\r" : "\\n", c);
-        // else if (c == EOF)
-        //     printf("EOF\n");
-        // else
-        //     printf("%c(%d)\n", c, c);
-
         // Solo se permiten caracteres de fin de linea/archivo o letras del abecedario
         if (!(c == '\r' || c == '\n' || c == EOF || ('a' <= tolower(c) && tolower(c) <= 'z')))
         {
@@ -307,7 +297,7 @@ void automata_procesar_archivo(Automata estadoInicial, FILE *archivoEntrada, FIL
         {
             if (c == '\r')
                 fgetc(archivoEntrada);
-            procesarCaracteres(&cola, &heapIntervalos, archivoSalida, cola_size(cola), &seEncontroUnaPalabra, indice);
+            procesarCaracteres(&cola, &bolsaIntervalos, archivoSalida, cola_size(cola), &seEncontroUnaPalabra, indice);
             // Imprimo un caracter de fin de linea si es necesario
             if (c != EOF)
                 fputc('\n', archivoSalida);
@@ -333,19 +323,19 @@ void automata_procesar_archivo(Automata estadoInicial, FILE *archivoEntrada, FIL
             int letrasADescartar = prevLargo - estadoActual->largoPrefijo + 1;
 
             // Proceso los caracteres si es necesario
-            procesarCaracteres(&cola, &heapIntervalos, archivoSalida, letrasADescartar, &seEncontroUnaPalabra, indice);
+            procesarCaracteres(&cola, &bolsaIntervalos, archivoSalida, letrasADescartar, &seEncontroUnaPalabra, indice);
             indice += letrasADescartar;
 
             // Se llego a un estado de aceptacion, meto el intervalo que representa la palabra actual a la lista de intervalos
             if (estadoActual->palabraAceptada)
-                heapIntervalos = heap_intervalos_insertar(heapIntervalos, intervalo_crear(indice, indice + estadoActual->largoPrefijo - 1));
+                bolsaIntervalos = bolsa_intervalos_insertar(bolsaIntervalos, intervalo_crear(indice, indice + estadoActual->largoPrefijo - 1));
             // Si existe algun sufijo propio de la palabra actual que esta en el diccionario, se inserta su intervalo correspondiente en la cola
             // de prioridad
             for (EstadoAutomata *estado_salida = estadoActual->transicionDeSalida; estado_salida != NULL; estado_salida = estado_salida->transicionDeSalida)
-                heapIntervalos = heap_intervalos_insertar(heapIntervalos, intervalo_crear(indice + estadoActual->largoPrefijo - estado_salida->largoPrefijo, indice + estadoActual->largoPrefijo - 1));
+                bolsaIntervalos = bolsa_intervalos_insertar(bolsaIntervalos, intervalo_crear(indice + estadoActual->largoPrefijo - estado_salida->largoPrefijo, indice + estadoActual->largoPrefijo - 1));
         }
     }
-    heap_intervalos_destruir(heapIntervalos);
+    bolsa_intervalos_destruir(bolsaIntervalos);
     cola_destroy(cola);
 }
 

@@ -341,6 +341,12 @@ palabras = list((text.split(' ')))
 #text = text.replace("\n\n"," ");
 #text = text.replace(' ','')
     
+abc = list(map(chr, range(97, 123)))
+
 with open("salida_python.txt", "w") as sys.stdout:
-    for palabra in palabras:
-        print(palabra)
+    for i in range(1,100000000):
+        c = i % 27
+        if c == 0:
+            print('\n',end='')
+        else:
+            print(abc[c-1],end='')

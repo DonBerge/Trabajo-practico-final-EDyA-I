@@ -1,5 +1,6 @@
-#include "../automata.c"
+#include "../automata.h"
 #include <stdlib.h>
+#include <string.h>
 #include <assert.h>
 
 #define CANT_TEST 6
@@ -68,7 +69,11 @@ int main()
     {
         sprintf(str, "./Diccionarios/%d.txt", i + 1);
         FILE *diccionario = fopen(str, "r");
-        assert(diccionario != NULL);
+        if(diccionario == NULL)
+        {
+            fprintf(stderr,"No se pudo abrir el archivo de diccionario, intenta ejecutar el programa en la misma carpeta donde estan los test");
+            return 1;
+        }
         Automata automata = automata_crear(diccionario);
         fclose(diccionario);
         sprintf(str, "./Entradas/%d.txt", i + 1);

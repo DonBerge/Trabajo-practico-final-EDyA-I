@@ -1,6 +1,6 @@
 # Fdb version 4
-["pdflatex"] 1688273115 "c:/Users/agust/OneDrive/Documentos/PROGRAMAS/PEROVIEJA++/TP Estructuras/Tex/archivo.tex" "archivo.pdf" "archivo" 1688273117 0
-  "C:/Users/agust/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map" 1688246073 80909 eab91d9745dd2edfd62a31d53cd5fe15 ""
+["pdflatex"] 1688860824 "c:/Users/agust/OneDrive/Documentos/PROGRAMAS/PEROVIEJA++/TP Estructuras/Tex/archivo.tex" "archivo.pdf" "archivo" 1688860829 0
+  "C:/Users/agust/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map" 1688858191 80909 eab91d9745dd2edfd62a31d53cd5fe15 ""
   "C:/Users/agust/AppData/Local/MiKTeX/miktex/data/le/pdftex/pdflatex.fmt" 1688227212 23178959 e91d4c3c00b635af842bacf689ce7b95 ""
   "C:/Users/agust/AppData/Local/Programs/MiKTeX/fonts/tfm/public/amsfonts/cmextra/cmex7.tfm" 1233951848 1004 54797486969f23fa377b128694d548df ""
   "C:/Users/agust/AppData/Local/Programs/MiKTeX/fonts/tfm/public/cm/cmbx10.tfm" 1136765053 1328 c834bbb027764024c09d3d2bf908b5f0 ""
@@ -14,6 +14,8 @@
   "C:/Users/agust/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb" 1247596667 32569 5e5ddc8df908dea60932f3c484a54c0d ""
   "C:/Users/agust/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy7.pfb" 1247596666 32716 08e384dc442464e7285e891af9f45947 ""
   "C:/Users/agust/AppData/Local/Programs/MiKTeX/tex/context/base/mkii/supp-pdf.mkii" 1580390158 71627 94eb9990bed73c364d7f53f960cc8c5b ""
+  "C:/Users/agust/AppData/Local/Programs/MiKTeX/tex/generic/iftex/iftex.sty" 1643997108 7237 bdd120a32c8fdb4b433cf9ca2e7cd98a ""
+  "C:/Users/agust/AppData/Local/Programs/MiKTeX/tex/generic/iftex/ifvtex.sty" 1643997108 1057 525c2192b5febbd8c1f662c9468335bb ""
   "C:/Users/agust/AppData/Local/Programs/MiKTeX/tex/generic/listofitems/listofitems.tex" 1566401670 27590 17724a32e183cb652d922ee9f34b134d ""
   "C:/Users/agust/AppData/Local/Programs/MiKTeX/tex/latex/00miktex/epstopdf-sys.cfg" 1616067285 584 2a1075dd71571459f59146da9f7502ad ""
   "C:/Users/agust/AppData/Local/Programs/MiKTeX/tex/latex/amsmath/amsbsy.sty" 1655058189 2222 78b930a5a6e3dc2ac69b78c2057b94d7 ""
@@ -25,6 +27,8 @@
   "C:/Users/agust/AppData/Local/Programs/MiKTeX/tex/latex/base/size10.clo" 1669844196 8448 c33a4e1cb35cee9b33c2b21033b73e39 ""
   "C:/Users/agust/AppData/Local/Programs/MiKTeX/tex/latex/epstopdf-pkg/epstopdf-base.sty" 1623003186 13886 d1306dcf79a944f6988e688c1785f9ce ""
   "C:/Users/agust/AppData/Local/Programs/MiKTeX/tex/latex/etoolbox/etoolbox.sty" 1601897756 46845 3b58f70c6e861a13d927bff09d35ecbc ""
+  "C:/Users/agust/AppData/Local/Programs/MiKTeX/tex/latex/geometry/geometry.cfg" 1578053545 1104 7ac475a4e3466b0b43e138e9356bda83 ""
+  "C:/Users/agust/AppData/Local/Programs/MiKTeX/tex/latex/geometry/geometry.sty" 1578053545 42759 9cf6c5257b1bc7af01a58859749dd37a ""
   "C:/Users/agust/AppData/Local/Programs/MiKTeX/tex/latex/graphics-cfg/color.cfg" 1465894292 1213 620bba36b25224fa9b7e1ccb4ecb76fd ""
   "C:/Users/agust/AppData/Local/Programs/MiKTeX/tex/latex/graphics-cfg/graphics.cfg" 1465894292 1224 978390e9c2234eab29404bc21b268d1e ""
   "C:/Users/agust/AppData/Local/Programs/MiKTeX/tex/latex/graphics-def/pdftex.def" 1663918690 19448 1e988b341dda20961a6b931bcde55519 ""
@@ -40,10 +44,12 @@
   "C:/Users/agust/AppData/Local/Programs/MiKTeX/tex/latex/xcolor/xcolor.sty" 1656236890 56148 51a9a8571c07b9921892ae11063ae853 ""
   "Imagenes//ejemplo_trie1.png" 1688241867 99037 6a260886a04efb23a3162eee7aaf56f7 ""
   "Imagenes//trie1.png" 1688228664 90299 09fc0103c44d7513b21d119b884f6a91 ""
+  "Imagenes/automata_falla_ejemplo_dola.png" 1688858276 158181 6bfbf21ef2867891076941c24c24e751 ""
+  "Imagenes/automata_falla_ejemplo_dosdolares.png" 1688855375 353212 b1570a95ede43f646f846441768afdb1 ""
   "Imagenes/trie1_transiciones_falla.png" 1688253867 107089 7708b641f3eef05a553639653e5bd0b1 ""
-  "archivo.aux" 1688273116 32 c81c40425fbb5e93b90fba65da0b5e61 "pdflatex"
-  "archivo.tex" 1688273113 7074 41eca10a06b531f240cbdff2b36e969d ""
-  "c:/Users/agust/OneDrive/Documentos/PROGRAMAS/PEROVIEJA++/TP Estructuras/Tex/archivo.tex" 1688273113 7074 41eca10a06b531f240cbdff2b36e969d ""
+  "archivo.aux" 1688860828 32 c81c40425fbb5e93b90fba65da0b5e61 "pdflatex"
+  "archivo.tex" 1688860822 8280 67c6afa6a92bb6125bcf8d629398bc48 ""
+  "c:/Users/agust/OneDrive/Documentos/PROGRAMAS/PEROVIEJA++/TP Estructuras/Tex/archivo.tex" 1688860822 8280 67c6afa6a92bb6125bcf8d629398bc48 ""
   (generated)
   "archivo.aux"
   "archivo.log"

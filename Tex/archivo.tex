@@ -9,6 +9,13 @@
     \!\!$\overset{\text{#1}}{\overset{\downarrow}{\text{#2}}}$\!\!
 }
 
+\usepackage{geometry}
+ \geometry{
+ a4paper,
+ total={170mm,257mm},
+ left=20mm,
+ top=20mm,
+ }
 
 \graphicspath{{./Imagenes/}}
 
@@ -98,20 +105,40 @@ se sigue la transición de falla y se revisa si es posible seguir desde ahi con 
 
 Eventualmente las transiciones de falla terminan en la raíz, si se llega hasta la raíz y no es posible seguir con el caracter 'x', entonces se descarta el caracter y se sigue leyendo el string.
 
-Con las transiciones de falla incluidas, el árbol ya puede usarse como si fuera un Automata de Estado Finito(de hecho, asi es como se lo llama en el código).
+Con las transiciones de falla incluidas, el árbol ya puede usarse como si fuera un Autómata de Estado Finito(de hecho, asi es como se lo llama en el código).
 
-\subsection*{Calculo de las transiciones de falla}
+Para el ejemplo de la palabra "dosdolares", con el diccionario ["dolar","dolares"] el espaciado se calcularia asi:
 
-Las transiciones de falla solo se pueden calcular una vez se ingresaron todos las palabras del diccionario. Para calcularlas se realiza lo siguiente:
+\begin{center}
+\includegraphics[scale=0.3]{Imagenes/automata_falla_ejemplo_dosdolares.png}
+\end{center}
 
-Se recorre el árbol por niveles:
-    Si el nodo actual N es la raíz, su padre es la raíz o es un nodo de palabra aceptada, entonces su transición de falla apunta a la raíz.
-    En caso contrario, N tiene un padre con la transición de falla ya calculada.
+Suponiendo que el autómata ya esta construido, espaciar una palabra tiene una complejidad $O(n+z)$ donde $n$ es el largo de la palabra y $z$ es la suma de todos los largos de las palabras encontradas.
+El n viene de que cada letra de la palabra es visitada una sola vez por los indices $i$ y $j$ que avanzan linealmente. El $z$ viene de que para mostrar una palabra encontrada hay que recorrerla de principio
+a fin, por lo que en total mostrar todas las palabras cuesta $O(z)$.
 
-    Si el nodo N esta unido a su padre P por una transición con el caracter 'x', entonces se sigue la transición de falla de P y de ahi
-    se sigue la transición por el caracter 'x' si es que existe. Si no existe entonces se sigue la transición de falla del padre de P y se repite el proceso.
+\newpage
 
-    La transición de falla de N va a terminar apuntando al nodo al que se llego siguiendo las sucesivas transiciones de falla de los ancestros y la transición por 'x'.
-    Si se llego hasta la raíz y la raíz no tiene una transición 'x', entonces la transición de falla de N apunta a la raíz.
+Sin embargo el algoritmo tiene errores, por ejemplo, para la palabra "dola" y el diccionario ["dolar","ol"] el algoritmo es como sigue:
+
+\begin{center}
+    \includegraphics[scale=0.3]{Imagenes/automata_falla_ejemplo_dola.png}
+\end{center}
+
+\subsection*{Solución: transiciones de salida}
+
+Un primer intento de solucionar este problema es que cuando se llega a un estado cualquiera, se empiezan a recorrer las transiciones de salida
+hasta la raíz, si en el camino se encuentra un estado de aceptación entonces se registra de alguna manera que una palabra se encontró.
+Como la distancia entre 2 estados de aceptación unidos por transiciones de falla puede ser bastante grande, esta opcion puede resultar ineficiente.
+
+Para optimizar esta solución se pueden añadir nuevas transiciones al autómata, las \textbf{transiciones de salida}, que apunten a un nodo que representa al sufijo
+propio mas grande que es a su vez una palabra del diccionario. Para el ejemplo anterior, la transición de salida del nodo con la palabra "dol" apuntaria al nodo con la palabra "ol" y
+todos los nodos restantes quedan sin transición de salida.
+
+De esta manera, cuando se llega a un nodo cualquiera, se recorren las transiciones de salida y se registran las palabras encontradas en el camino. Si bien el metodo es igual al anterior, este
+es mas eficiente ya que solo visita los nodos de aceptación y se "saltea" los nodos que no son de aceptación.
+
+
+
 
 \end{document}
