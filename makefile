@@ -7,7 +7,7 @@ AUTOMATA_C = $(AUTOMATA_DIR)/automata.c
 AUTOMATA_TEST = $(AUTOMATA_DIR)/Test/test_automata.c
 
 COLA_DIR = ./Estructuras/Cola
-BOLSA_INTERVALOS_DIR = ./Estructuras/BolsaIntervalos/Heap
+BOLSA_INTERVALOS_DIR = ./Estructuras/BolsaIntervalos
 
 OBJDIR = obj
 

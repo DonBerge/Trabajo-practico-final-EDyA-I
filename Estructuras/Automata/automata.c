@@ -7,7 +7,7 @@
 
 #include "automata.h"
 #include "../Cola/cola.h"
-#include "../BolsaIntervalos/Heap/bolsaintervalos.h"
+#include "../BolsaIntervalos/bolsaintervalos.h"
 
 typedef struct _EstadoAutomata
 {
@@ -37,9 +37,11 @@ typedef struct _EstadoAutomata
 
 EstadoAutomata *estado_crear(EstadoAutomata *padre, char valor_transicion)
 {
+    // Reservo memoria para guardar el estado del automata
     EstadoAutomata *estado = (EstadoAutomata *)malloc(sizeof(EstadoAutomata));
     assert(estado != NULL);
     estado->palabraAceptada = 0;
+    // Si padre == NULL, entonces el estado creado es la raiz
     // La raiz tiene como prefijo la cadena vacia, su largo prefijo es 0
     estado->largoPrefijo = (padre == NULL) ? 0 : padre->largoPrefijo + 1;
     // Inicialmente, el nodo no tiene transicion de falla ni de salida
